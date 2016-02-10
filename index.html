@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Upload Files</title>
+	<link rel="stylesheet" type="text/css" href="default.css" /> <!-- this css goes with the template -->
+
+	<script type="text/javascript" src="js/jquery-1.7.1.js"></script>
+	<script type="text/javascript" src="js/jquery.form.js"></script>
+	<style type="text/css">
+		#outerBox  { width:93%; height:93%; z-index:900;
+					background-color: rgb(50, 50, 50); 
+					background-color: rgba(50, 50, 50, .75);}
+		#UploadBox { width:540px; height:425px; z-index:1000; border:1px solid #dddddd;
+					background-color: rgb(50, 50, 50); 
+					background-color: rgba(50, 50, 50, .90);}
+		#imgHolder { border: 3px solid #ccffcc; width: 250px; height: 250px; margin:20px; float:left; overflow:hidden;
+					 color:rgb(255,255,255); color:rgba(255,255,255, .15); font-size:36px; font-family:Arial, Helvetica, sans-serif; text-align:center;}
+		#imgHolder.hover { border: 3px dashed #ccffcc; }
+		#allImages { border: 1px solid #ccffcc; width: 190px; height:300px; margin:20px; float:right; color:#ccffcc; 
+					 font-family:Arial, Helvetica, sans-serif; font-size:10px; overflow:auto; padding:4px;}
+		.bgLoading {
+		    display:    block;
+		    z-index:    1100;
+		    height:     100%;
+		    width:      100%;
+		    background: rgba( 255, 255, 255, .8 ) 
+		                url('images/FhHRx.gif') 
+		                50% 50% 
+		                no-repeat;
+		}
+	</style>
+</head>
+<body>
+	
+	<div id="outerBox"></div>
+
+	<div id="UploadBox">
+		<div id="ubInstructions" style="position:relative; top:15px; left:10px; color:#dddddd">Drag and drop your image below to upload it</div>
+		<div id="UploadBoxClose" style="position:relative; text-align:center; width:15px; left:510px; top:0px; 
+	    					   border:1px solid #dddddd; padding:1px; color:#dddddd; cursor:pointer;">X</div>
+		<div id="imgHolder">&nbsp; <br />drop<br />&nbsp;<br />here</div>
+		<div id="allImages"><p>Uploaded Images:</p></div>
+		<div id="ubInstructions2" style="color:#dddddd; margin-left:20px;"><p>or browse for your file below:</p></div>
+		<div id="uploadButton">
+			<form id="form0" name="form0" action="doUpload.php" method="post" enctype="multipart/form-data">
+				<input style="position:relative; top:10px; left:20px; margin-bottom:10px;" type="file" name="userfile" id="userfile" />
+				<input type="hidden" name="uploadFile" value="submit" />
+			</form>
+		</div>
+	</div>
+
+	<script type="text/javascript"><!--
+		//jQuery
+		$(document).ready(function(){																										//wait for document to load
+			//detect support for IE
+			var ie = (function(){
+				var undef,
+					v = 3,
+					div = document.createElement('div'),
+					all = div.getElementsByTagName('i');
+			
+				while (
+					div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
+					all[0]
+				);
+			
+				return v > 4 ? v : undef;
+			}());
+			
+			if( !(ie == undefined) )
+			{
+				//it is IE, don't display the drop box
+				$("#ubInstructions").hide();
+				$("#imgHolder").hide();
+				$("#ubInstructions2").html("<p>Browse for your file below:</p>");
+			}
+			//end detect IE
+			
+			$("#outerBox").css("position","absolute");																	//position div absolutely
+			$("#outerBox").css("top", Math.max(0, (($(window).height() - $("#outerBox").outerHeight()) / 2) + $(window).scrollTop()) + "px");	//center div vertically in window
+			$("#outerBox").css("left", Math.max(0, (($(window).width() - $("#outerBox").outerWidth()) / 2) + $(window).scrollLeft()) + "px");	//center div horizontally in window
+			$("#outerBox").hide();																											//hide the UploadBox div initially, no delay, immediate hide
+
+			$("#UploadBox").css("position","absolute");																						//position div absolutely
+			$("#UploadBox").css("top", Math.max(0, (($(window).height() - $("#UploadBox").outerHeight()) / 2) + $(window).scrollTop()) + "px");	//center div vertically in window
+			$("#UploadBox").css("left", Math.max(0, (($(window).width() - $("#UploadBox").outerWidth()) / 2) + $(window).scrollLeft()) + "px");	//center div horizontally in window
+			$("#UploadBox").hide();			//hide the UploadBox div initially, no delay, immediate hide
+			
+			$("#uploadImagesAnchor").click(function(e){		//when the <a> is clicked to upload files
+				e.preventDefault();							//prevent the default functionality
+				$("#outerBox").show(400);					//show the outerBox over 4 tenths of a second
+				$("#UploadBox").show(400);					//show the UploadBox over 4 tenths of a second
+				
+			});		//end function for when the <a> is clicked to upload files
+			
+			$("#UploadBoxClose").click(function(e){				//when the X is clicked in the UploadBox div
+				e.preventDefault();								//prevent the default functionality
+				$("#outerBox").hide(400);						//hide the outerBox over 4 tenths of a second
+				$("#UploadBox").hide(400);						//hide the UploadBox over 4 tenths of a second
+			});													//end function for X being clicked
+
+
+			<!-- YOU NEED TO ADD AJAX FUNCTIONALITY HERE -->
+
+ $('#form0').ajaxForm({									//use jquery.form.js to upload file via Ajax
+	 beforeSubmit: function(a,f,o) {					//syntax for using jquery.form.js
+		 $("#imgHolder").html("");						//clear the imgholder
+		 $("#imgHolder").addClass("bgLoading");			//add the location animation
+	 },
+	 success: function(data) {							//when upload is successful
+		 if (typeof data == 'object' && data.nodeType)
+		 	data = elementToString(data.documentElement, true);
+		else if (typeof data =='object')
+			data = objToString(data);
+			
+			//write an <img /> tag inside the imgHoler div
+			$("#imgHolder").removeClass("bgLoading");		//remove the loading animation
+			$("#imgHolder").html("");						//clear the imgHolder
+			$("#imgHolder").html("<img id='img1' src ='uploads/"+ data + "'width='250' alt='Picture that was browsed for' title='Picture that was browsed for' />");
+			
+			$("#allImages").append("<img style='margin:2px;' scr='uploads/" + data + "'width='75' alt='' title='' />");
+			$("#allImages").animate({scrollTop: $('#allImages')[0].scrollHeight}, 1500);
+	 }
+ });
+ 
+ 			$("form[name=form0]").change(function(e){
+				 e.preventDefault();
+	 			$("form[name=form0]").submit();
+
+		});							//end document ready function
+		
+		
+	});//end jQuery
+		<!-- YOU NEED TO ADD MORE AJAX FUNCTIONALITY HERE -->
+
+		function getXMLHTTPRequest()
+		{
+			var request = false;
+			try{
+				//eg FireFox
+				request = new XMLHttpRequest();
+			}
+			catch(error1)
+			{
+				try
+				{
+					//some versions of IE
+					request = new ActiveXObject("Msxm12.XMLHTTP");
+				}
+				catch(error2)
+				{
+					try
+					{
+						//some versions of IE
+						request = new ActiveXObject("Microsoft.XMLHTTP");
+					}
+					catch(error3)
+					{
+						request = false;
+					}
+				}
+			}
+			return request
+		}//end getXHTMLHTTPRequest
+		
+		
+		var imgHolder = document.getElementById('imgHolder'); 					// get the imgHolder dive for use in Java script
+		var url = "upload.php"; 												// point the javascript to the php that will upload the file
+		
+		imgHolder.ondragover = function() { this.className = 'hover'; return false; }; // change the css value when the image is dragged over div
+		imgHolder.ondragend = function() { this.className = ''; return false; }; 	// change the css value when image no longer dragged over div
+		imgHolder.ondrop = function(event) {   										// function for ondrop, when image is dropped onto div
+			this.className = ''; 													// change the css value to make sure the hover class was removed
+			event.preventDefault(); 												// prevent the default action (if it was an <a>
+			
+			$("#imgHolder").html(""); 												//clear the imgHolder
+			$("#imgHolder").addClass("bgLoading");									//add the loading animation
+			
+			var file = event.dataTransfer.files[0],  								//use the event to get the file that was dropped
+			reader = new FileReader();												// create a new instance of filereader
+			
+			preview = new FileReader(); 											// create another filereader
+			
+			reader.onloadend = function() 											//function for when reader finished loading
+			{
+				binary = reader.result;  											//store result from reader into variable
+				
+				//begin AJAX
+				request = getXMLHTTPRequest(); 										// initiate ajax request
+				request.onreadystatechange = function()							 	//function fo when reader finished loading
+				{
+					if(request.readyState == 4 && request.status == 200) 			// only do something if readystate = 4 and status = 200
+					{
+						result = request.responseText; 								// get the result of the request
+						eval("result=" + request.responseText);						// evaluate the result of the request
+						if(result.error == "")										//if there was no error, add the image to the div so the user sees it
+						{
+																					//write an <img /> tag inside the imgHolder div
+							$("#imgHolder").removeClass("bgLoading"); 				// remove the loading animation
+							$("#imgHolder").html(""); 								// clear the imgHolder
+							imgHolder.innerHTML = "<img id='img1' src='" + result.source + "'widt='250' alt='Picture that was dragged and dropped' title='Picture that was dragged and dropped' />";
+							//imgHolder.style.background = 'url(' + result.source + ') no-repeat center'; //the line above works better
+							
+							allImages.innerHTML += "<img style='margin:2px;' src='" + result.source + "'width='75' alt='' title='' />";
+						}
+						$("#allImages").animate({ scrollTop: $('#allImages')[0].scrollHeight +10}, 1500);
+					}
+				};// end onreadystatechange function
+				
+				//ajax sending info to php --send as binary
+				if(request.sendAsBinary != null) {						//if we can send it as binary									
+					request.open('POST', url + '?binary=true', true);	//Ajax request, use post, set url(the php file), do it asyncronously
+					var boundary = 'xxxxxxxxx'; 						// create a boundary to identify the end of the binary data
+					var body = '--' + boundary + "\r\n"; 				// create the body of the ajax request
+					body += "Content-Disposition: form-data; name='image'; filename='" + file.name + "'\r\n"; //,add headers to the body
+					body += "Content-Type: application/octet-stream\r\n\r\n"; 								 // add headers to the body
+					body += binary + "\r\n";																//add the binary data to the body
+					body += '--' +boundary + '--'; 															//add the boundary to identify the end of the binary data
+					request.setRequestHeader('content-type', 'multipart/form-data; boundary=' + boundary); //set the HTTP header
+					request.sendAsBinary(body); //send the ajax request to php
+				}
+				else {															//otherwise send but not as binary
+					request.open('POST', url + '?binary=false', true); 			//ajax request use post, set url the php file, do it asyncronously
+					request.setRequestHeader('UP-FILENAME', file.name); 		//set variables in the http headers to go to the php file
+					request.setRequestHeader('UP-SIZE', file.size);				//set variables in the http headers to go to the php file
+					request.setRequestHeader('UP-TYPE', file.type); 			//set variables in the http headers to go to the php file
+					request.send(window.btoa(binary)); 							//send the ajax request to php
+				}
+				preview.onloadend = function(){									//function for after
+			};
+		};//end onloadend function
+		
+		reader.readAsBinaryString(file);		//send the file to reader as binary
+		preview.readAsDataURL(file);			//send the file to preview as data
+		return false;							//return
+		}; //end ondrop function
+		
+		
+		
+	--></script>
+
+
+<!-- You need the above stuff to do the uploading -->
+<!-- template stuff below -->
+<!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- zenlike1.0 by nodethirtythree design
+	 http://www.nodethirtythree.com      -->
+
+<div id="upbg"></div>
+
+<div id="outer">
+
+
+	<div id="header">
+		<div id="headercontent">
+			<h1>Zenlike<sup>1.0</sup></h1>
+			<h2>A free design by NodeThirtyThree</h2>
+		</div>
+	</div>
+
+
+	<form method="post" action="">
+		<div id="search">
+			<input type="text" class="text" maxlength="64" name="keywords" />
+			<input type="submit" class="submit" value="Search" />
+		</div>
+	</form>
+
+
+	<div id="headerpic"></div>
+
+	
+	<div id="menu">
+		<!-- HINT: Set the class of any menu link below to "active" to make it appear active -->
+		<ul>
+			<li><a href="#">Home</a></li>
+			<li><a href="#" class="active">News</a></li>
+			<li><a href="#">Blog</a></li>
+			<li><a href="#">Gallery</a></li>
+			<li><a href="#">About</a></li>
+			<li><a href="#">Contact</a></li>
+		</ul>
+	</div>
+	<div id="menubottom"></div>
+
+	
+	<div id="content">
+
+		<!-- Normal content: Stuff that's not going to be put in the left or right column. -->
+		<div id="normalcontent">
+			<h3>Upload your files here</h3>
+			<div class="contentarea">
+				<!-- Normal content area start -->
+                <!-- ADD THE ANCHOR TAG BELOW FOR THIS ASSIGNMENT ------------------------------------------------- -->
+
+				<img src="images/pic1.jpg" class="left" alt="A chinese lion statue" />
+				<p>Click here to <a href="#" id="uploadImagesAnchor">upload new images</a></p>
+				<p>&nbsp;</p>
+				<p>&nbsp;</p>
+
+				<!-- Normal content area end -->
+			</div>
+		</div>
+
+	
+		<div class="divider1"></div>
+
+
+		<!-- Primary content: Stuff that goes in the primary content column (by default, the left column) -->
+		<div id="primarycontainer">
+			<div id="primarycontent">
+				<!-- Primary content area start -->
+		
+				<div class="post">
+					<h4>Lorem Ipsum Veroeros</h4>
+					<div class="contentarea">
+						<div class="details">Posted by <a href="#">Jane Doe</a> on September 25, 2006</div>	
+						<p>Volutpat at varius sed sollicitudin et, arcu. Vivamus viverra. Nullam turpis. Vestibulum sed etiam. Lorem ipsum sit amet dolore. Nulla facilisi. Sed tortor. Aenean felis. Quisque eros. Cras lobortis commodo metus. Vestibulum vel purus. In eget odio in sapien adipiscing blandit. Quisque augue tortor, facilisis sit amet, aliquam, suscipit vitae, cursus sed, arcu lorem ipsum dolor sit amet.</p>
+						<ul class="controls">
+							<li><a href="#" class="printerfriendly">Printer Friendly</a></li>
+							<li><a href="#" class="comments">Comments (18)</a></li>
+							<li><a href="#" class="more">Read More</a></li>				
+						</ul>
+					</div>
+				</div>
+		
+				<div class="divider2"></div>
+		
+				<div class="post">
+					<h4>Consequat Odio Vestibulum</h4>
+					<div class="contentarea">
+						<div class="details">Posted by <a href="#">Jane Doe</a> on September 25, 2006</div>	
+						<img src="images/pic3.jpg" class="left" alt="A chinese dragon" />
+						<p>Aenean felis quisque eros. Cras lobortis commodo lorem ipsum dolor. Vestibulum vel purus. In eget odio in sapien adipiscing blandit. Lorem ipsum dolor sit amet consequat etiam sed dolore.</p>
+						<ul class="controls">
+							<li><a href="#" class="printerfriendly">Printer Friendly</a></li>
+							<li><a href="#" class="comments">Comments (18)</a></li>
+							<li><a href="#" class="more">Read More</a></li>				
+						</ul>
+					</div>
+				</div>
+	
+				<div class="divider2"></div>
+		
+				<div class="post">
+					<h4>Adipiscing Nullam</h4>
+					<div class="contentarea">
+						<div class="details">Posted by <a href="#">Jane Doe</a> on September 25, 2006</div>	
+						<p>Eget odio in sapien adipiscing blandit. Quisque augue tortor, facilisis sit amet, aliquam, suscipit vitae, cursus sed, arcu lorem ipsum dolor sit amet felis quisque eros. Cras lobortis commodo lorem ipsum dolor. Vestibulum vel purus. In eget odio in sapien adipiscing blandit. Quisque augue tortor, facilisis sit amet, aliquam, suscipit lorem ipsum dolor.</p>
+						<ul class="controls">
+							<li><a href="#" class="printerfriendly">Printer Friendly</a></li>
+							<li><a href="#" class="comments">Comments (18)</a></li>
+							<li><a href="#" class="more">Read More</a></li>				
+						</ul>
+					</div>
+				</div>
+
+				<!-- Primary content area end -->
+			</div>
+		</div>
+
+		
+		<!-- Secondary content: Stuff that goes in the secondary content column (by default, the narrower right column) -->
+		<div id="secondarycontent">
+			<!-- Secondary content area start -->
+			
+			<!-- HINT: Set any div's class to "box" to encapsulate it in (you guessed it) a box -->
+			<div class="box">
+				<h4>Blandit Veroeros</h4>
+				<div class="contentarea">
+					<img src="images/pic2.jpg" class="left" alt="Random foliage" />
+					<p>Sed etiam et lorem ipsum nulla vero et lobortis felis sed etiam. Lorem ipsum sit amet dolore. Nulla facilisi. Sed tortor. Aenean felis. Quisque eros etiam <a href="#">sed commodo</a>.</p>
+				</div>
+			</div>
+		
+			<div>
+				<h4>Nullam Dolore</h4>
+				<div class="contentarea">
+					<ul class="linklist">
+						<li><a href="#">Volutpat at varius sed</a></li>
+						<li><a href="#">Sollicitudin et arcu</a></li>
+						<li><a href="#">Vivamus viverra nullam</a></li>
+						<li><a href="#">Turpis vestibulum</a></li>
+						<li><a href="#">Sed etiam lorem ipsum</a></li>
+						<li><a href="#">Sit amet dolore nulla</a></li>
+						<li><a href="#">Facilisi sed tortor</a></li>
+						<li><a href="#">Aenean felis quisque</a></li>
+						<li><a href="#">Eros cras lobortis vel</a></li>
+						<li><a href="#">Purus in eget odio sapien</a></li>
+						<li><a href="#">Adipiscing blandit</a></li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Secondary content area end -->
+		</div>
+
+
+	</div>
+
+	<div id="footer">
+			<div class="left">&copy; 2006 Your Website Name. All rights reserved.</div>
+			<div class="right">Design by <a href="http://www.nodethirtythree.com/">NodeThirtyThree Design</a></div>
+	</div>
+	
+</div>
+
+</body>
+</html>
